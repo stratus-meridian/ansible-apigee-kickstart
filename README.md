@@ -44,6 +44,11 @@ $ pip3 install --user molecule-vagrant
 $ molecule test
 ```
 
+The current `molecule test` suite verifies the final installation by running the [verify.yml][2]
+playbook once the instance has passed the provisioning and indempotence check. The verification
+performed is that upon requesting the homepage for the newly provisioned instance we are
+greeted by the installation wizard, and this first page is the language selection page.
+
 We have to use vagrant with molecule as with the default docker containers there are
 certain systemd commands that don't work inside containers (like systemctl daemon-reload).
 
@@ -51,3 +56,4 @@ Because of this, for the GitHub Action runner we have to use macos-latest instea
 ubuntu-latest, as the later does not support virtualization. See https://github.com/actions/virtual-environments/issues/183
 
 [1]: https://www.drupal.org/docs/8/modules/apigee-developer-portal-kickstart/use-kickstart-with-apigee-edge-for-private-cloud
+[2]: molecule/default/verify.yml
