@@ -1,4 +1,6 @@
-Ansible playbook for [Apigee Developer Portal Kickstart][1]
+[![Deployment package build](https://github.com/stratus-meridian/ansible-apigee-kickstart/workflows/CI/badge.svg)](https://github.com/stratus-meridian/ansible-apigee-kickstart/actions?query=workflow%3ACI)
+
+# Ansible playbook for [Apigee Developer Portal Kickstart][1]
 
 
 ## Running the playbook
