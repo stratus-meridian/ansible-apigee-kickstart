@@ -5,6 +5,9 @@
 
 ## Running the playbook
 
+See [variables.yml.example](variables.yml.example) for the variables used, and required
+by this playbook.
+
 ```shell
 $ cp variables.yml.example variables.yml
   # customize the variables within variables.yml
