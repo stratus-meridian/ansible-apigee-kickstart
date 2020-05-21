@@ -1,0 +1,37 @@
+<?php
+                  
+// @codingStandardsIgnoreFile
+
+$databases = [];
+$databases['default']['default'] = array( 
+   'database' => '{{ mariadb_database_name }}',
+   'username' => '{{ mariadb_user }}',
+   'password' => '{{ mariadb_password }}',
+   'prefix' => '',
+   'host' => '{{ mariadb_host }}',
+   'port' => '{{ mariadb_port }}',
+   'namespace' => 'Drupal\\Core\\Database\\Driver\\mysql',
+   'driver' => 'mysql',        
+);  
+
+{% if existing_hash_salt.stdout is defined %}
+$settings['hash_salt'] = '{{ existing_hash_salt.stdout }}';
+{% else %}
+$settings['hash_salt'] = '{{ new_hash_salt.stdout }}';
+{% endif %}
+
+    
+$settings['update_free_access'] = FALSE;
+
+$settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
+  
+$settings['file_scan_ignore_directories'] = [
+  'node_modules',              
+  'bower_components',          
+];
+  
+$settings['entity_update_batch_size'] = 50;
+
+$settings['entity_update_backup'] = TRUE;
+
+$config_directories['sync'] = '../config/sync';

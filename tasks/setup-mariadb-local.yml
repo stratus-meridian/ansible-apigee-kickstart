@@ -1,0 +1,10 @@
+- name: MariaDB - install, create drupal user and stratus_meridian database
+  include_role: name=geerlingguy.mysql
+  vars:
+    mysql_root_password: "{{ mariadb_local_root_password }}"
+    mysql_databases:
+      - name: "{{ mariadb_database_name }}"
+    mysql_users:
+      - name: "{{ mariadb_user }}"
+        password: "{{ mariadb_password }}"
+        priv: "{{ mariadb_database_name }}.*:ALL"

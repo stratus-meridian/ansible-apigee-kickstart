@@ -1,0 +1,29 @@
+- hosts: all
+  become: yes
+  vars_files:
+    - variables.yml
+
+  handlers:
+    - name: restart sshd
+      become: yes
+      service: name=sshd state=restarted
+
+  tasks:
+
+  - include_tasks: tasks/setup-system.yml
+    tags: ['system', 'lemp']
+
+  - include_tasks: tasks/setup-nginx.yml
+    tags: ['nginx', 'lemp']
+
+  - include_tasks: tasks/setup-mariadb-local.yml
+    tags: ['mariadb', 'lemp']
+    when: mariadb_instance == 'local'
+
+  - include_tasks: tasks/setup-php-composer.yml
+    tags: ['php-composer', 'lemp']
+
+  - include_tasks: tasks/setup-apigee.yml
+    tags: ['apigee']
+
+#- hosts: vagrant

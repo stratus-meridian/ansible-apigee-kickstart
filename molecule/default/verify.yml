@@ -1,0 +1,19 @@
+---
+# This is an example playbook to execute Ansible tests.
+
+- name: Verify
+  hosts: all
+  vars:
+    expected_title: Choose language | Apigee Developer Portal Kickstart
+
+  tasks:
+    - name: Create request
+      uri:
+        url: http://localhost/
+        status_code: 200
+        dest: /tmp/possible-apigee-response
+
+    - name: Match title
+      shell: grep -o "{{ expected_title }}" /tmp/possible-apigee-response
+      register: title
+      failed_when: title.stdout != expected_title

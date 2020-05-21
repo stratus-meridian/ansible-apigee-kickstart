@@ -1,0 +1,70 @@
+- name: Drupal Distribution - ensure nginx user exists
+  user: name=nginx
+
+- name: Drupal Distribution - handover ownership of /opt to nginx
+  file:
+    path: /opt
+    owner: nginx
+
+- name: Drupal Distribution - check if Apigee is already installed
+  stat: path="{{ application_installation_directory }}"
+  register: apigee
+
+# COMPOSER USES MORE THAN 1.6GB of memory. As the exact limit is unpredictable,
+# when running this composer step we allow unlimited php memory usage
+- name: Drupal Distribution - install Apigee via composer create-project
+  command: php -d memory_limit=-1 /usr/bin/composer create-project apigee/devportal-kickstart-project:8.x-dev apigee --no-interaction
+  become: yes
+  become_user: nginx
+  args:
+    chdir: /opt
+  when: apigee.stat.isdir is not defined
+
+- name: Drupal Distribution - read existing hash_salt
+  shell: grep -P hash_salt settings.php | grep -P -o "'[^']+';" | sed "s/^'//;s/';$//"
+  args:
+    chdir: "{{ application_installation_directory }}/web/sites/default"
+  when: apigee.stat.isdir is defined
+  register: existing_hash_salt
+  changed_when: false
+  tags: ['skip_ansible_lint']
+  # we don't care about pipefail suggestion, as even a failing shell will have empty output
+
+- debug:
+    msg: "{{ existing_hash_salt }}"
+# Besides the database connection details, Drupal requires a hash_salt value to be present in
+# order to kickstart the installation on web access
+- name: Drupal Distribution - generate hash_salt
+  command: php vendor/bin/drush php-eval 'echo \Drupal\Component\Utility\Crypt::randomBytesBase64(55) . "\n";'
+  become: yes
+  become_user: nginx
+  args:
+    chdir: "{{ application_installation_directory }}"
+  when: existing_hash_salt.stdout is not defined or existing_hash_salt.stdout == ''
+  register: new_hash_salt
+
+- name: Drupal Distribution - configure installer database connection details
+  template:
+    src: files/settings.php.j2
+    dest: "{{ application_installation_directory }}/web/sites/default/settings.php"
+    owner: nginx
+
+
+# Alternative for the sefcontext call, but instead would allow web processes to
+# read any user date from any location. With sefcontext we restrict read/write
+# access to the /opt/stratus-meridian folder only
+#- shell: setsebool -P httpd_read_user_content 1
+- name: Drupal Distribution - allow nginx to read and write site content via selinux relabel
+  sefcontext:
+    target: '{{ application_installation_directory }}(/.*)?'
+    setype: httpd_sys_rw_content_t
+    state: present
+  register: sefcontext
+
+# the skip_ansible_lint tag is to avoid the suggestion of converting this specific
+# task to a handler instead. As it's only used once it doesn't really make sense and
+# additionally would require the definition to be moved inside the playbook.yml file
+- name: Drupal Distribution - apply selinux relabeling
+  command: restorecon -irv {{ application_installation_directory }}
+  when: sefcontext.changed
+  tags: ['skip_ansible_lint']

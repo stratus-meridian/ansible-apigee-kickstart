@@ -1,0 +1,33 @@
+---
+dependency:
+  name: galaxy
+  options:
+    role-file: requirements.yml
+    #requirements-file: ../../requirements.yml
+lint: ""
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+platforms:
+  - name: instance
+    box: centos/8
+    memory: 2048
+    interfaces:
+      # `network_name` is the required identifier, all other keys map to
+      # arguments.
+      - network_name: forwarded_port
+        guest: 80
+        host: 8080
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - create
+    - converge
+    - idempotence
+    - verify
+provisioner:
+  name: ansible
+verify:
+  name: ansible
