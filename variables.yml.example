@@ -1,20 +1,25 @@
 # Instance can be either local or remote, if the instance is local during the
 # playbook run MariaDB will be installed
 mariadb_instance: local
-# For locally installed instances we need to set a specific MariaDB version
+# only relevant when doing a local installation. Defines the mysql root password
 mariadb_local_root_password: password
-# When configuring a local instance this values will be used to set up the
+# When configuring a local instance these values will be used to set up the
 # instance. For a remote instance these must match the connection details,
 # as the playbook doesn't configure external instances
 mariadb_database_name: apigee
 mariadb_user: apigee
 mariadb_password: apigee
-# Defaults for the local instance
+# Defaults for the local instance, customize for external instances
 mariadb_host: localhost
 mariadb_port: 3306
 
+# Desired PHP version available from Remi repositories, currently one
+# of the following: 7.2, 7.3, 7.4
 php_version: 7.3
 
+
+# Desired location where to install the Apigee Developer Portal
 application_installation_directory: /opt/apigee
 
+# Name of the nginx configuration that will be generated on the target host
 nginx_configuration_filename: apigee.conf
