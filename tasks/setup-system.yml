@@ -1,0 +1,49 @@
+- name: System - install EPEL repository
+  include_role: name=geerlingguy.repo-epel
+
+- name: System - install REMI repository
+  include_role: name=geerlingguy.repo-remi
+
+# required for relabeling the filesystem, and debugging security warning
+- name: System - install SELinux utilities
+  dnf: name=policycoreutils-python-utils state=present
+
+# required when testing with molecule as the base container might not have
+# ssh server installed
+- name: System - ensure SSH server is installed
+  dnf: name=openssh-server state=present
+  register: sshd_installed
+
+- name: System - disable ssh root login
+  lineinfile: dest=/etc/ssh/sshd_config regexp="^#?PermitRootLogin" line="PermitRootLogin no"
+  notify: restart sshd
+
+- name: System - enable firewalld service
+  service: name=firewalld state=started enabled=yes
+
+- name: System - check default zone
+  command: firewall-cmd --get-default-zone
+  register: default_zone
+  changed_when: "'public' != default_zone.stdout"
+
+- name: System - change default firewall zone to public
+  command: firewall-cmd --set-default-zone=public
+  when: default_zone.stdout != 'public'
+
+- name: System - firewall allow ssh/http/https connections
+  firewalld:
+    service: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+    zone: public
+  with_items:
+    - http
+    - https
+    - ssh
+
+# cockpit is a web management interface available for RedHat/CentOS/Fedora distributions
+# and these distro's come with explicit rules that allow access to that service. As we
+# don't install cockpit, we just remove the default access rule
+- name: System - disallow cockpit connections
+  firewalld: service=cockpit permanent=yes state=disabled zone=public

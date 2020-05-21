@@ -1,0 +1,38 @@
+- name: PHP & Composer - install custom php version
+  include_role: name=geerlingguy.php-versions
+
+- name: PHP & Composer - install PHP and configure fpm
+  include_role: name=geerlingguy.php
+  vars:
+    php_packages_extra:
+      - php-bcmath
+      - php-json
+      - php-mysqlnd
+      - php-process
+    php_memory_limit: "128M"
+    php_webserver_daemon: "nginx"
+    php_fpm_listen: "/var/run/php-fpm/www.sock"
+    php_enable_php_fpm: true
+    php_fpm_state: started
+    php_fpm_enabled_on_boot: true
+    php_fpm_pool_user: nginx
+    php_fpm_pool_group: nginx
+
+- name: PHP & Composer - Composer system dependencies
+  dnf:
+    name:
+      - git
+      - unzip
+    state: present
+
+- name: PHP & Composer - install composer in /usr/bin
+  include_role: name=geerlingguy.composer
+  vars:
+    # DEFAULT INSTALL PATH is /usr/local/bin/composer which is not in the
+    # predefined PATH environment variable of new users
+    composer_path: /usr/bin/composer
+
+# PERMISSION REQUIRED for web processes (or fpm) to execute memory (or shell out)
+# If not enabled the Drupal installation page won't even render, unsure how it's used
+- name: PHP & Composer - selinux rule to allow code execution by PHP fpm
+  seboolean: name=httpd_execmem state=yes persistent=yes
